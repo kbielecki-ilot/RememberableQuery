@@ -29,6 +29,21 @@ class RememberableQuery
      * @var string
      */
     protected string $cacheKey;
+    
+    /**
+     * @var \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Query\Builder
+     */
+    protected $builder;
+    
+    /**
+     * @var int|\DateTimeInterface|\DateInterval
+     */
+    protected $ttl;
+    
+    /**
+     * @var int
+     */
+    protected int $wait = 0;
 
     /**
      * RememberableQuery constructor.
@@ -42,14 +57,17 @@ class RememberableQuery
      */
     public function __construct(
         Factory $cache,
-        protected Builder|EloquentBuilder $builder,
-        protected int|DateTimeInterface|DateInterval $ttl,
+        $builder,
+        $ttl,
         ?string $cacheKey = null,
         ?string $store = null,
-        protected int $wait = 0
+        int $wait = 0
     ) {
         $this->cacheKey = $cacheKey ?? $this->cacheKeyHash();
         $this->cache = $cache->store($store);
+        $this->builder = $builder;
+        $this->ttl = $ttl;
+        $this->wait = $wait;
     }
 
     /**
@@ -93,7 +111,9 @@ class RememberableQuery
     {
         return $this->cache
             ->lock($this->cacheKey, $this->wait)
-            ->block($this->wait, fn() => $this->getResult($method, $arguments));
+            ->block($this->wait, function () {
+                $this->getResult($method, $arguments);
+            });
     }
 
     /**
