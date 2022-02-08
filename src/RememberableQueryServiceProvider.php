@@ -18,7 +18,7 @@ class RememberableQueryServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $function = function (
-            int|DateTimeInterface|DateInterval $ttl = 60,
+            $ttl = 60,
             string $key = null,
             string $store = null,
             int $wait = 0,
